@@ -59,23 +59,23 @@ def rotate_particles_final(primary_set, prometheus_set):
             theta_array[j] = np.arccos(np.clip(rotated[2], -1.0, 1.0))
             phi_array[j] = np.arctan2(rotated[1], rotated[0])
             
-            # print first few particles
-            if i < 2 and j < 2:
-                print(f"Event {i}, Particle {j}:")
-                print(f"  Original: theta={theta_orig:.4f}, phi={phi_orig:.4f}")
-                print(f"  Rotated: theta={theta_array[j]:.4f}, phi={phi_array[j]:.4f}")
-                print(f"  Changed: {theta_array[j] != theta_orig or phi_array[j] != phi_orig}")
+            # # print first few particles
+            # if i < 2 and j < 2:
+            #     print(f"Event {i}, Particle {j}:")
+            #     print(f"  Original: theta={theta_orig:.4f}, phi={phi_orig:.4f}")
+            #     print(f"  Rotated: theta={theta_array[j]:.4f}, phi={phi_array[j]:.4f}")
+            #     print(f"  Changed: {theta_array[j] != theta_orig or phi_array[j] != phi_orig}")
         
 
         prometheus_set.at[i, 'theta'] = theta_array
         prometheus_set.at[i, 'phi'] = phi_array
         
-        # test
-        if i == 0:
-            print("\nAfter assignment:")
-            print(f"  First theta original: {theta_orig:.4f}")
-            print(f"  First theta in DataFrame: {prometheus_set.loc[0, 'theta'][0]:.4f}")
-            print(f"  Changed in DataFrame: {prometheus_set.loc[0, 'theta'][0] != theta_orig}")
+        # # test
+        # if i == 0:
+        #     print("\nAfter assignment:")
+        #     print(f"  First theta original: {theta_orig:.4f}")
+        #     print(f"  First theta in DataFrame: {prometheus_set.loc[0, 'theta'][0]:.4f}")
+        #     print(f"  Changed in DataFrame: {prometheus_set.loc[0, 'theta'][0] != theta_orig}")
     
     return primary_set, prometheus_set
 
