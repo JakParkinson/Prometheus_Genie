@@ -1,0 +1,8 @@
+I used absolite paths on the .sh slurm scripts that anyone on the cluster should be able to execute by runnign "sbatch ___.sh" except the conda environment conda activate myenv which has no easy way to use aboslute paths.
+
+One way around this is to make a copy of my own environment using the yml file in this folder and the command:
+
+conda env create -f /groups/icecube/shared_location/environment.yml -n your_env_name
+
+
+If you use 'myenv' I think it should then work, but not sure as I can't really test this.
