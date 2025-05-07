@@ -34,6 +34,6 @@ source /groups/icecube/jackp/setup_prometheus_and_genie.sh || { echo "Failed to 
 #cd /groups/icecube/jackp/prometheus_genie_cleaned/harvard-prometheus/examples
 echo "Running benchmark script..."
 
-python super_simple_genie_injetion.py --simset 22 --rootfile /groups/icecube/jackp/genie_test_outputs/output_gheps/gntp_icecube_numu_100.gtac.root
+python example_genie_external_root.py --simset 22 --rootfile /groups/icecube/jackp/genie_test_outputs/output_gheps/gntp_icecube_numu_100.gtac.root
 echo "Benchmark job completed successfully!"
 

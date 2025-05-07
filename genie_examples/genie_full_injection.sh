@@ -34,6 +34,6 @@ source /groups/icecube/jackp/setup_prometheus_and_genie.sh || { echo "Failed to 
 #cd /groups/icecube/jackp/prometheus_genie_cleaned/harvard-prometheus/examples
 echo "Running benchmark script..."
 
-python genie_full_injection_example.py --simset 48 --num_events 20
+python example_genie_full_injection.py --simset 48 --num_events 20
 echo "Benchmark job completed successfully!"
 

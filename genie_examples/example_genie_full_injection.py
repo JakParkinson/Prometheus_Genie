@@ -59,9 +59,7 @@ def main():
     processing_end_time = time.time()
     print(f"File processing and conversion completed in {processing_end_time - processing_start_time:.2f} seconds")
 
-    # absolute path:
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-   # output_dir = f"/groups/icecube/jackp/prometheus_genie_cleaned/harvard-prometheus/examples/output"
+
     primrary_file_path = f'{OUTPUT_DIR}/genie_events_primary_new_test_simset_{simset}.parquet'
     prometheus_file_path = f'{OUTPUT_DIR}/genie_events_prometheus_new_test_simset_{simset}.parquet'
 
