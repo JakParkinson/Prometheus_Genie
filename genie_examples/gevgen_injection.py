@@ -22,7 +22,7 @@ def run_gevgen(num_events, output_dir):
         "-p", "14", ## muon neutrino
         "-t", "1000080160[0.888],1000010010[0.112]", ## H2O
         "-e", "1,100", ## in GeV
-        "-f", "x^-2", ## Power Law
+        "-f", "x^-2", ## Energy flux
         "--seed", "12345",
         "--cross-sections", "/groups/icecube/jackp/genie-3.4.2/ice_numu_cross_sections.xml", ## combined H and O16 cross section filex into 1
         "--event-generator-list", "Default",
