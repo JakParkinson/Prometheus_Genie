@@ -35,22 +35,18 @@ def main():
     parser = argparse.ArgumentParser(description='Run GENIE simulation with Prometheus')
     parser.add_argument('--simset', type=int, default=1, 
                         help='Simulation set number (default: 1)')
-    parser.add_argument('--rootfile', type=str, 
-                        default='/groups/icecube/jackp/genie_test_outputs/output_gheps/gntp_icecube_numu_100.gtac.root',
-                        help='Path to the root file')
+    parser.add_argument('--num_events', type=int, 
+                        default='10',
+                        help='Number of events')
     args = parser.parse_args()
     
     # Use the arguments
     simset = args.simset
-    root_file_path = args.rootfile
+    num_events = args.num_events
     
-    print(f"Using simset: {simset}")
-    #print(f"Using root file: {root_file_path}")
-    
-    # Timing for file processing and conversion in one step
-    processing_start_time = time.time()
+    print(f"Using simset: {simset}, num_events {num_events}")
 
-    num_events = 5
+    processing_start_time = time.time()
 
     logger.info("Starting GENIE simulation")
     genie_start = time.time()
@@ -95,18 +91,17 @@ def main():
     config["injection"]["name"] = "GENIE"
     config["run"]["outfile"] = f"{OUTPUT_DIR}/{num_events}events_simset_{simset}.parquet"
     config["run"]["nevents"] = num_events
-    config["injection"]["GENIE"] = config["injection"].get("GENIE", {})
-    config["injection"]["GENIE"]["paths"] = config["injection"]["GENIE"].get("paths", {})
+    #config["injection"]["GENIE"] = config["injection"].get("GENIE", {})
+   # config["injection"]["GENIE"]["paths"] = config["injection"]["GENIE"].get("paths", {})
     config["injection"]["GENIE"]["inject"] = False ## we aren't injecting using prometheus, we are using an injection file
     config["injection"]["GENIE"]["simulation"] = {}
     ## geofile:
-    config["detector"]["geo file"] = f"{RESOURCE_DIR}/geofiles/icecube.geo"
+    config["detector"]["geo file"] = f"{RESOURCE_DIR}/geofiles/icecube_gen2.geo"
     ## ppc configuration:
     config['photon propagator']['name'] = 'PPC_UPGRADE'
     #config["photon propagator"]["PPC"] = config["photon propagator"].get("PPC", {})
    # config["photon propagator"]["PPC"]["paths"] = config["photon propagator"]["PPC"].get("paths", {})
     config["photon propagator"]["PPC_UPGRADE"]["paths"]["ppc_tmpdir"] = "./ppc_tmpdir" + str(simset)
-   # config["photon propagator"]["PPC"]["paths"]["ppctables"] = f"{RESOURCE_DIR}/PPC_tables/spx" ## spx for test
     
     config["photon propagator"]["PPC_UPGRADE"]["paths"]["ppc_tmpfile"] = "ppc_tmp"+str(simset)
     config["photon propagator"]["PPC_UPGRADE"]["simulation"]["supress_output"] = False ## for printing!
