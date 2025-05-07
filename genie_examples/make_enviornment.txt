@@ -1,11 +1,13 @@
-I used absolite paths on the .sh slurm scripts that anyone on the cluster should be able to execute by runnign "sbatch ___.sh" except the conda environment conda activate myenv which has no easy way to use aboslute paths.
+I used absolite paths on the .sh slurm scripts that anyone on the cluster should be able to execute by runnign "sbatch ___.sh". 
+This should work except probably for the line 'conda activate myenv' which has no easy way to use aboslute paths.
 
-One way around this is to make a copy of my own environment using the yml file in this folder and the command:
+If you have the necessary python packages with versions installed in a conda or pyenv you could replace that line with the line to activate your own enviornment.
+
+Alternatively,  one could make a copy of my own environment using the yml file in this folder and the command:
 
 conda env create -f /groups/icecube/shared_location/environment.yml -n your_env_name
 
-
-If you use 'myenv' I think it should then work, but not sure as I can't really test this.
+If you use the enviornment name 'myenv' I think the slurm should work without changing anything, but not sure as I can't really test this.
 
 
 For the ipynb, it's a bit trickier. It may work with just the new conda enviornment, but if it doesn't then try:
