@@ -9,5 +9,7 @@ from .lepton_propagation import __init__
 from .photon_propagation import __init__
 from .prometheus import Prometheus
 
+from .injection.registered_injectors import RegisteredInjectors
+
 __all__ = (Prometheus, config)
 __version__ = '1.0.0'

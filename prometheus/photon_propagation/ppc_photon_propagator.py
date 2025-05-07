@@ -39,20 +39,41 @@ def ppc_sim(
         # TODO handle this correctl by converting to photons after prop
         return
     elif abs(int(particle))==211 or abs(int(particle))==321: # It's a charged pion
+        print(f"Handling charged pion/kaon {int(particle)}")
         if np.linalg.norm(particle.position-det.offset) <= r_inice:
             loss = Loss(int(particle), particle.e, particle.position, 0) ## no track length for pion
             particle.losses.append(loss)
     elif abs(int(particle))==311: # It's a neutral kaon
+        print(f"Particle {int(particle)} is a neutral kaon, not propagating")
         # TODO handle this correctl by converting to photons after prop
         return
-    elif int(particle)==-2000001006 or int(particle)==2212: # Hadrons
+    elif  abs(int(particle)) in [2212, 2112, 321, 3222, 411, 421, 3112, 3122, 3212, 3223, 4122, 431, 4212, 4222, 130] or int(particle) == -2000001006 or int(particle) == 1000080160 or int(particle) == 2000000101:  # All other hadrons plus O16
+        print(f"returning hadron {int(particle)}")
         if np.linalg.norm(particle.position-det.offset) <= r_inice:
             loss = Loss(int(particle), particle.e, particle.position, 0) ## no track length for hadron
             particle.losses.append(loss)
+        elif int(particle) == 22:  # It's a photon
+            print(f"Handling photon {int(particle)}")
+            if np.linalg.norm(particle.position-det.offset) <= r_inice:
+                # Treat photon as a point-like energy deposition
+                loss = Loss(int(particle), particle.e, particle.position, 0) # 0 track length
+                particle.losses.append(loss)
+                print(f"Photon deposited {particle.e:.2f} GeV at position {particle.position}")
+            print(f"Photon {int(particle)} handled, not propagating further")
+            return  # We don't need to propagate photons further
+    elif int(particle) == 22:  # It's a photon
+        print(f"Handling photon {int(particle)}")
+        if np.linalg.norm(particle.position-det.offset) <= r_inice:
+            # Treat photon as a point-like energy deposition
+            loss = Loss(int(particle), particle.e, particle.position, 0) # 0 track length
+            particle.losses.append(loss)
+            print(f"Photon deposited {particle.e:.2f} GeV at position {particle.position}")
+        return  # We don't need to propagate photons further
+    
     else:
         # TODO make this into a custom error
         print(repr(particle))
-        raise ValueError("Unrecognized particle")
+        raise ValueError(f"Unrecognized particle: {int(particle)}")
     geo_tmpfile = f"{ppc_config['paths']['ppc_tmpdir']}/geo-f2k"
     ppc_tmpfile = f"{ppc_config['paths']['ppc_tmpdir']}/{ppc_config['paths']['ppc_tmpfile']}_{str(particle)}"
     f2k_tmpfile = f"{ppc_config['paths']['ppc_tmpdir']}/{ppc_config['paths']['f2k_tmpfile']}_{str(particle)}"

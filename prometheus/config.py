@@ -211,6 +211,25 @@ _baseconfig = {
                 'supress_output': True
             }
         },
+        'PPC_UPGRADE': {
+            "paths": {
+                'location':f'{RESOURCES_DIR}/PPC_executables/PPC_UPGRADE/',
+                'force': False,
+                "ppc_tmpdir": "./.ppc_tmp",
+                'ppc_tmpfile': '.event_hits.ppc.tmp',
+                'f2k_tmpfile': '.event_losses.f2k.tmp',
+                'ppc_prefix':'',
+                'f2k_prefix':'',
+                'ppctables':'../resources/PPC_tables/spice_ftp-v3m/',
+                'ppc_exe': '../resources/PPC_executables/PPC_UPGRADE/ppc',  # binary executable
+                #"photon field name": "photons",
+                #"outfile": None,
+            },
+            "simulation": {
+                'device': 0,  # CPU
+                'supress_output': True
+            }
+        },
     }
 }
 

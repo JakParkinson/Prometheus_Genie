@@ -6,3 +6,4 @@ class Interactions(Enum):
     CHARGED_CURRENT = 1
     NEUTRAL_CURRENT = 2
     DIMUON = 3
+    UNKNOWN = 4  # Added UNKNOWN interaction type if GENIE output doesnt fit

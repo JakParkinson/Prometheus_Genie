@@ -7,9 +7,9 @@ from .registered_propagators import (
 # importing Olympus
 def get_photon_propagator(name: str) -> PhotonPropagator:
     name = name.lower()
-    if name not in "ppc ppc_cuda olympus".split():
+    if name not in "ppc ppc_cuda ppc_upgrade olympus".split():
         raise ValueError("Unknown photon propagator")
-    if name in "ppc ppc_cuda".split():
+    if name in "ppc ppc_cuda ppc_upgrade".split():
         from .ppc_photon_propagator import PPCPhotonPropagator
         return PPCPhotonPropagator
     else:

@@ -3,6 +3,7 @@
 # Copyright (C) 2022 Christian Haack, Jeffrey Lazar, Stephan Meighen-Berger,
 # Interface class to the package
 
+### new added option for supplying external h5 file from GENIE injection
 import numpy as np
 import awkward as ak
 import pyarrow.parquet as pq
@@ -58,7 +59,9 @@ class Prometheus(object):
     def __init__(
         self,
         userconfig: Union[None, dict, str] = None,
-        detector: Union[None, Detector] = None
+        detector: Union[None, Detector] = None,
+        primary_set_parquet_path: str = None,
+        prometheus_set_parquet_path: str = None
     ) -> None:
         """Initializes the Prometheus class
 
@@ -116,6 +119,7 @@ class Prometheus(object):
 
         config_mims(config, self.detector)
         clean_config(config)
+        print("using injector", config["injection"])
 
         self._injector = getattr(
             RegisteredInjectors,
@@ -127,6 +131,7 @@ class Prometheus(object):
             regularize(config["lepton propagator"]["name"])
         )
 
+        print('photon prop: ', regularize(config["photon propagator"]["name"]))
         self._pp = getattr(
             RegisteredPhotonPropagators,
             regularize(config["photon propagator"]["name"])
@@ -153,6 +158,13 @@ class Prometheus(object):
         )
         self._end_timing_misc = time()
 
+        self._primary_set_parquet_path = primary_set_parquet_path ## for genie parquet injection
+        self._prometheus_set_parquet_path = prometheus_set_parquet_path
+        if primary_set_parquet_path is not None:
+            self._injection = INJECTION_CONSTRUCTOR_DICT[self._injector](primary_set_parquet_path, prometheus_set_parquet_path, self.detector)
+        else:
+            self._injection = None
+
 
     @property
     def detector(self):
@@ -165,6 +177,11 @@ class Prometheus(object):
         return self._injection
 
     def inject(self):
+        if self._primary_set_parquet_path is not None:
+            print(f"Using primary file: {self._primary_set_parquet_path}")
+            print(f"Using prometheus file: {self._prometheus_set_parquet_path}")
+
+            return  # skip injection if using an external file (for GENIE)
         """Determines initial neutrino and final particle states according to config"""
         injection_config = config["injection"][config["injection"]["name"]]
         if injection_config["inject"]:
@@ -228,6 +245,23 @@ class Prometheus(object):
             fs = glob(f"{config['photon propagator']['PPC_CUDA']['paths']['ppctables']}/*")
             for f in fs:
                 shutil.copy(f, config['photon propagator']["PPC_CUDA"]["paths"]["ppc_tmpdir"])
+        elif config["photon propagator"]["name"].lower()=="ppc_upgrade":
+            from glob import glob
+            import shutil
+            from .utils.clean_ppc_tmpdir import clean_ppc_tmpdir
+            if (
+                os.path.exists(config['photon propagator']["PPC_UPGRADE"]["paths"]["ppc_tmpdir"]) and \
+                not config["photon propagator"]["PPC_UPGRADE"]["paths"]["force"]
+            ):
+                raise PpcTmpdirExistsError(
+                    config['photon propagator']["PPC_UPGRADE"]["paths"]["ppc_tmpdir"]
+                )
+            elif os.path.exists(config['photon propagator']["PPC_UPGRADE"]["paths"]["ppc_tmpdir"]):
+                clean_ppc_tmpdir(config['photon propagator']["PPC_UPGRADE"]["paths"]["ppc_tmpdir"])
+            os.mkdir(config['photon propagator']["PPC_UPGRADE"]["paths"]["ppc_tmpdir"])
+            fs = glob(f"{config['photon propagator']['PPC_UPGRADE']['paths']['ppctables']}/*")
+            for f in fs:
+                shutil.copy(f, config['photon propagator']["PPC_UPGRADE"]["paths"]["ppc_tmpdir"])
 
         nevents = len(self.injection)
 
@@ -244,6 +278,8 @@ class Prometheus(object):
             clean_ppc_tmpdir(config['photon propagator']['PPC']['paths']['ppc_tmpdir'])
         elif config["photon propagator"]["name"].lower()=="ppc_cuda":
             clean_ppc_tmpdir(config['photon propagator']['PPC_CUDA']['paths']['ppc_tmpdir'])
+        elif config["photon propagator"]["name"].lower()=="ppc_upgrade":
+            clean_ppc_tmpdir(config['photon propagator']['PPC_UPGRADE']['paths']['ppc_tmpdir'])
 
 
     def sim(self):
