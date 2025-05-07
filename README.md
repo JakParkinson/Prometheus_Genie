@@ -1,3 +1,6 @@
+For Genie injection related see 'genie_injection' folder
+and for instructions on running see 'make_enviornment.txt' file in genie_examples
+
 # Prometheus amu branch
 
 This fork/branch updates the interface to change the continuous loss type of muons from a series of stochastic delta emissions to the existing amu- case in PPC. The amu- case in PPC was designed for secondaries below an Ecut of 0.5 GeV, in addition to handling Cherenkov emission from the muon. PPC currently only has yield parameterisations for the 0.5 GeV Ecut (see Table C.3 https://www.sciencedirect.com/science/article/abs/pii/S0927650512001831 for source), so I have added a warning that adjusts the Ecut to 0.5 GeV and the vcut to 1 in new_proposal_lepton_propagator.py. 
