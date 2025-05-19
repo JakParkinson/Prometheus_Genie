@@ -35,4 +35,6 @@ LI
 memories.npy
 
 timings.npy
-timings_e.npy
+timings_e.npyexamples/
+genie_analysis/
+genie_examples/

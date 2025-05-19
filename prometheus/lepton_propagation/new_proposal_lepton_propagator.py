@@ -332,7 +332,10 @@ def new_proposal_losses(
 
             ### decay type (child decay particles handled later)
             if loss_type != 1000000011: 
-                logger.debug(f"New proposal f2k line: TR {0} {0} {loss_type} {x*cm_to_m} {y*cm_to_m} {z*cm_to_m} {theta} {phi} {l} {energy} {time}\n") ## just for logging purposes (matches write_to_f2k.py TR line except z which is expected)
+               # print(f'{x,y,z: {x},{y},{z}}')
+                print('pos: ', pos)
+                print(z)
+                logger.debug(f"New proposal f2k line: TR {0} {0} {loss_type} {pos[0]} {pos[1]} {pos[2]} {theta} {phi} {l} {energy} {time}\n") ## just for logging purposes (matches write_to_f2k.py TR line except z which is expected)
                 particle.losses.append(Loss(loss_type, energy, pos, l)) # this time using track length
 
     else: ## not changing loss code for any particles other than muon (for now)

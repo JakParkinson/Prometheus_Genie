@@ -107,8 +107,8 @@ pstring_to_PDG = {val:key for key, val in PDG_to_pstring.items()}
 # Mapping from https://github.com/tudo-astroparticlephysics/PROPOSAL/blob/master/src/PROPOSAL/PROPOSAL/particle/Particle.h
 # to https://www.zeuthen.desy.de/~steffenp/f2000/f2000_1.5.html#SEC26
 int_type_to_str = {
-    # 11: "epair",    # electron
-    # -11: "epair",   # positron
+    11: "e-",    # electron
+    -11: "e+",   # positron
     # 12: "hadr",     # electron neutrino (
     # -12: "hadr",    # electron antineutrino
     # 13: "mupair",   # muon
@@ -154,6 +154,7 @@ int_type_to_str = {
     1000000007: "hadr",   # hadron production
     1000000008: "delta",  # delta ray (duplicate?)
     1000000011: "hadr", # decay
+    1000000012: "brems", # no 'annihlation' in ppc, but same as general em cascade i think
     1000080160: "nucleus", # its O16 not sure about str name
     2000000101: "nucleus", # proton
 

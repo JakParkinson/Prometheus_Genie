@@ -32,14 +32,15 @@ def ppc_sim(
         return
     # TODO put this in config
     r_inice = det.outer_radius + 1000
-    if abs(int(particle)) in [11, 13, 15]: # It's a charged lepton
+    if abs(int(particle)) in [11, 13, 15]: # It's a charged lepton excluding electron
+        print("propagating ", int(particle))
         lp.energy_losses(particle, det)
     # All of these we consider as point depositions
     elif abs(int(particle))==111: # It's a neutral pion
         # TODO handle this correctl by converting to photons after prop
         return
-    elif abs(int(particle))==211 or abs(int(particle))==321: # It's a charged pion
-        print(f"Handling charged pion/kaon {int(particle)}")
+    elif abs(int(particle))==211 or abs(int(particle))==321: # It's a charged pion or electron
+        print(f"Handling charged pion/kaon/electron {int(particle)}")
         if np.linalg.norm(particle.position-det.offset) <= r_inice:
             loss = Loss(int(particle), particle.e, particle.position, 0) ## no track length for pion
             particle.losses.append(loss)
@@ -47,7 +48,7 @@ def ppc_sim(
         print(f"Particle {int(particle)} is a neutral kaon, not propagating")
         # TODO handle this correctl by converting to photons after prop
         return
-    elif  abs(int(particle)) in [2212, 2112, 321, 3222, 411, 421, 3112, 3122, 3212, 3223, 4122, 431, 4212, 4222, 130] or int(particle) == -2000001006 or int(particle) == 1000080160 or int(particle) == 2000000101:  # All other hadrons plus O16
+    elif  abs(int(particle)) in [2212, 2112, 321, 3222, 411, 421, 3112, 3122, 3212, 3223, 4122, 431, 4212, 4222, 130] or int(particle) == -2000001006 or int(particle) == 1000080160:  # All other hadrons plus O16
         print(f"returning hadron {int(particle)}")
         if np.linalg.norm(particle.position-det.offset) <= r_inice:
             loss = Loss(int(particle), particle.e, particle.position, 0) ## no track length for hadron
@@ -69,7 +70,9 @@ def ppc_sim(
             particle.losses.append(loss)
             print(f"Photon deposited {particle.e:.2f} GeV at position {particle.position}")
         return  # We don't need to propagate photons further
-    
+    elif int(particle) == 2000000101:
+        print(f"Paritcle {int(particle)} is a genie construct , should have no photon yield")
+        return
     else:
         # TODO make this into a custom error
         print(repr(particle))
