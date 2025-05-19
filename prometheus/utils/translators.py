@@ -154,7 +154,7 @@ int_type_to_str = {
     1000000007: "hadr",   # hadron production
     1000000008: "delta",  # delta ray (duplicate?)
     1000000011: "hadr", # decay
-    1000000012: "brems", # no 'annihlation' in ppc, but same as general em cascade i think
+    1000000012: "epair", # positron annihlation with electron, no annihlation parameterisation in ppc, but same as general em cascade i think
     1000080160: "nucleus", # its O16 not sure about str name
     2000000101: "nucleus", # proton
 
