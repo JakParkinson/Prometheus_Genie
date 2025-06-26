@@ -16,7 +16,7 @@ void load_muon_params() {
     }
     
     string line;
-    getline(file, line);
+    getline(file, line); // Skip header
     
     MuonParam param;
     while (file >> param.energy_center >> param.track_center >> param.mu >> param.sigma) {
@@ -32,7 +32,7 @@ float sample_muon_secondary(float energy_gev, float track_distance_m) {
     if (!muon_params_loaded) load_muon_params();
     if (muon_params.empty()) return -1.0f;
     
-    // closest bin
+    // Find closest bin
     float min_distance = 1e30f;
     const MuonParam* closest = nullptr;
     
@@ -52,14 +52,23 @@ float sample_muon_secondary(float energy_gev, float track_distance_m) {
     cerr << "energy_gev " << energy_gev << ", track_distance_m" << track_distance_m 
          << "closest mu : " << closest->mu << ", closest sigma: " << closest->sigma << endl;
     
-    float normal_sample = grnd(); // grnd() samples from a N(0,1)
+    // Sample from log-normal with independent random state
+   // static unsigned int local_seed = 12345 + (unsigned int)energy_gev + (unsigned int)track_distance_m;
+    static unsigned int local_seed = time(NULL) + (unsigned int)energy_gev + (unsigned int)track_distance_m;
+    cerr << "local seed: " << local_seed << endl; 
+    auto local_grnd = [&]() {
+        auto local_rnd = [&]() {
+            unsigned int rnd;
+            do rnd = rand_r(&local_seed); while(rnd == 0);
+            const float a = 1.0f / (1ll + RAND_MAX);
+            return a * rnd;
+        };
+        return sqrtf(-2 * logf(local_rnd())) * sinf(2 * FPI * local_rnd());
+    };
+    
+    float normal_sample = local_grnd();
     return expf(closest->mu + closest->sigma * normal_sample);
 }
-
-
-
-
-
 float xrnd(){
   unsigned int rnd;
   do rnd=rand_r(&sv); while(rnd==0);

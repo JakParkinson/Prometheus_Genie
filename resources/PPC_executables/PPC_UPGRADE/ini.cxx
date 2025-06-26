@@ -128,7 +128,29 @@ struct itype{
   float mas;  // maximum angular sensitivity
   vector<float> s; // ang. sens. coefficients
 
+	  vector<float> dot_products;
+  vector<float> acceptances;
+
   itype(): def(false){ }
+
+  void loadAngularAcceptance(const string& filename) {
+    ifstream file(filename.c_str());
+    if (!file.is_open()) {
+      cerr << "Warning: Cannot load angular acceptance file " << filename << endl;
+      return;
+    }
+    
+    float dp, acc;
+    while (file >> dp >> acc) {
+      dot_products.push_back(dp);
+      acceptances.push_back(acc);
+    }
+    file.close();
+    
+    if (!dot_products.empty()) {
+      cerr << "Loaded " << dot_products.size() << " angular acceptance points from " << filename << endl;
+    }
+  }
 
   void add(string file){
     def=true; mas=1, ave=0;
@@ -171,21 +193,37 @@ struct itype{
     return al-sin(2*al)/2;
   }
 
-  float f(float x){ // angular sensitivity curve (peaks at 1)
-    if(beta<-1) return sqrt(1-x*x);
-    else{
-      float sum=x>0?x:0;
-      if(beta<1){
-	float y=sqrt(1-x*x)/beta;
-	if(y>1){
-	  y=1/y;
-	  float c=1-beta*beta;
-	  sum+=(aS(y)/c-aS(y*fabs(x)/sqrt(c))*fabs(x))/FPI;
-	}
-      }
-      return sum;
+//   float f(float x){ // angular sensitivity curve (peaks at 1)
+//     if(beta<-1) return sqrt(1-x*x);
+//     else{
+//       float sum=x>0?x:0;
+//       if(beta<1){
+// 	float y=sqrt(1-x*x)/beta;
+// 	if(y>1){
+// 	  y=1/y;
+// 	  float c=1-beta*beta;
+// 	  sum+=(aS(y)/c-aS(y*fabs(x)/sqrt(c))*fabs(x))/FPI;
+// 	}
+//       }
+//       return sum;
+//     }
+//   }
+
+float f(float x) {
+  if (dot_products.empty()) {
+
+	return 0; // no guard rails
+  } 
+  
+  for (int i = 0; i < dot_products.size() - 1; i++) {
+    if (dot_products[i] <= x && x <= dot_products[i + 1]) {
+		//cerr <<"for beta: " << beta << ", for dot_product: " << x << ", and i think closest one, " << dot_products[i] <<  ", interpolated angular acceptance: " <<  acceptances[i] + (acceptances[i + 1] - acceptances[i]) * (x - dot_products[i]) / (dot_products[i + 1] - dot_products[i]) << endl;
+      return acceptances[i] + (acceptances[i + 1] - acceptances[i]) * (x - dot_products[i]) / (dot_products[i + 1] - dot_products[i]);
     }
+	
   }
+  return 0.0f;
+}
 
   float xarea(float dot){ // OM cross-sectional area for direction with cos(zenith)=dot
     return Rz>0?FPI*Rr*sqrt(Rz*Rz-dot*dot*(Rz*Rz-Rr*Rr)):-4*Rr*Rz*sqrt(1-dot*dot);
@@ -208,6 +246,8 @@ struct itype{
   }
 
   int getPMT(V<3> dir, V<3> pos, V<3> tilt, float rnd, float ph = -1.f){
+	 // cerr << "dir:, [" << dir[0] << ", " <<dir[1]<< ", "<< dir[2] << "]"<<endl;
+
     if(def){
       bool flag;
       if(mas>0){
@@ -226,6 +266,9 @@ struct itype{
       }
       return flag?0:-1;
     }
+	
+
+	
     else{
       if(ph>=0){ // rotating photon by -ph instead of PMTs
 	ph-=cable;
@@ -698,27 +741,44 @@ struct ini{
       else{ cerr<<"Could not open file cfg.txt"<<endl; exit(1); }
     }
 
-    {
-      ifstream inFile((omdir+"om.conf").c_str(), ifstream::in);
-      if(!inFile.fail()){
-	string in;
-	while(getline(inFile, in)){
-	  int m;
-	  unsigned int n;
-	  itype t;
-	  float th, ph;
-	  float other;
-	  int read=sscanf(in.c_str(), "%*s %d %f %f %f %f %d %f %f %f", &m, &t.area, &t.beta, &t.Rr, &t.Rz, &n, &th, &ph, &other);
-	  t.cable=read>=9?other:0;
-	  if(read>=8){
-	    t.add(th, ph);
-	    for(unsigned int i=1; i<n && getline(inFile, in); i++)
-	      if(2==sscanf(in.c_str(), "%f %f %f", &th, &ph, &other)) t.add(th, ph);
-	    if(t.dirs.size()==n) types.insert(make_pair(m, t));
-	  }
-	}
-	inFile.close();
+{
+  ifstream inFile((omdir+"om.conf").c_str(), ifstream::in);
+  if(!inFile.fail()){
+    string in;
+    while(getline(inFile, in)){
+      int m;
+      unsigned int n;
+      itype t;
+      float th, ph;
+      float other;
+      int read=sscanf(in.c_str(), "%*s %d %f %f %f %f %d %f %f %f", &m, &t.area, &t.beta, &t.Rr, &t.Rz, &n, &th, &ph, &other);
+      t.cable=read>=9?other:0;
+      if(read>=8){
+        t.add(th, ph);
+        for(unsigned int i=1; i<n && getline(inFile, in); i++)
+          if(2==sscanf(in.c_str(), "%f %f %f", &th, &ph, &other)) t.add(th, ph);
+		if(t.dirs.size()==n) {
+			// Load angular acceptance BEFORE inserting into types map
+			if(m == 1) { // DOM type
+				t.loadAngularAcceptance(omdir + "dom_as.dat");
+				cerr << "loading DOM as.dat " << endl;
+			} 
+			if (m==3) { //mDOM
+				t.loadAngularAcceptance(omdir + "mDOM_as.dat");
+				cerr << "loading mDOM as.dat " << endl;
+				
+			} 
+			if (m==4) { //DEgg
+				t.loadAngularAcceptance(omdir + "DEgg_as.dat");
+				cerr << "loading DEgg as.dat " << endl;
+			}
+			
+			types.insert(make_pair(m, t));  // Insert AFTER loading
+		}
       }
+    }
+    inFile.close();
+  }
 
       if(!types.empty()){
 	if(ico.ini(omdir+"om.dirs")<1){ cerr<<"Error: could not initialize an array of directions"<<endl; exit(1); }
@@ -1362,6 +1422,7 @@ struct ini{
 	    while(inFile>>ya>>xa){
 	      if(xa<0 || (num>0 && ya<=yo)){ flag=false; break; }
 	      qx.push_back(xa); qy.push_back(ya);
+		 // cerr << "xa: " << xa << endl;
 	      yo=ya; num++;
 	    }
 	    if(qx.size()<2) flag=false;

@@ -1,3 +1,74 @@
+struct MuonParam {
+    float energy_center, track_center, mu, sigma;
+};
+
+vector<MuonParam> muon_params;
+bool muon_params_loaded = false;
+
+void load_muon_params() {
+    if (muon_params_loaded) return;
+    
+    ifstream file("/groups/icecube/jackp/prometheus_genie_cleaned/harvard-prometheus/resources/PPC_executables/PPC_UPGRADE/muon_secondary_params_fine.txt");
+    if (!file.is_open()) {
+        cerr << "Warning: muon_secondary_params_fine.txt not found, using original parameterization" << endl;
+        muon_params_loaded = true;
+        return;
+    }
+    
+    string line;
+    getline(file, line); // Skip header
+    
+    MuonParam param;
+    while (file >> param.energy_center >> param.track_center >> param.mu >> param.sigma) {
+        muon_params.push_back(param);
+    }
+    file.close();
+    
+    muon_params_loaded = true;
+    cerr << "Loaded " << muon_params.size() << " muon secondary parameters" << endl;
+}
+
+float sample_muon_secondary(float energy_gev, float track_distance_m) {
+    if (!muon_params_loaded) load_muon_params();
+    if (muon_params.empty()) return -1.0f;
+    
+    // Find closest bin
+    float min_distance = 1e30f;
+    const MuonParam* closest = nullptr;
+    
+    for (const auto& param : muon_params) {
+        float log_energy_dist = fabsf(logf(energy_gev) - logf(param.energy_center));
+        float log_track_dist = fabsf(logf(track_distance_m) - logf(param.track_center));
+        float distance = sqrtf(log_energy_dist*log_energy_dist + log_track_dist*log_track_dist);
+        
+        if (distance < min_distance) {
+            min_distance = distance;
+            closest = &param;
+        }
+    }
+    
+    if (!closest) return -1.0f;
+    
+    cerr << "energy_gev " << energy_gev << ", track_distance_m" << track_distance_m 
+         << "closest mu : " << closest->mu << ", closest sigma: " << closest->sigma << endl;
+    
+    // Sample from log-normal with independent random state
+   // static unsigned int local_seed = 12345 + (unsigned int)energy_gev + (unsigned int)track_distance_m;
+    static unsigned int local_seed = time(NULL) + (unsigned int)energy_gev + (unsigned int)track_distance_m;
+    cerr << "local seed: " << local_seed << endl; 
+    auto local_grnd = [&]() {
+        auto local_rnd = [&]() {
+            unsigned int rnd;
+            do rnd = rand_r(&local_seed); while(rnd == 0);
+            const float a = 1.0f / (1ll + RAND_MAX);
+            return a * rnd;
+        };
+        return sqrtf(-2 * logf(local_rnd())) * sinf(2 * FPI * local_rnd());
+    };
+    
+    float normal_sample = local_grnd();
+    return expf(closest->mu + closest->sigma * normal_sample);
+}
 float xrnd(){
   unsigned int rnd;
   do rnd=rand_r(&sv); while(rnd==0);
@@ -165,12 +236,33 @@ float yield(float E, int type){  // cascades
 }
 
 float yield(float E, float dr){  // bare muon
+
+  float secondary_ratio;
   float logE=logf(max(m0, E));
-  float extr=1+max(0.0f, 0.1880f+0.0206f*logE);
-  float nph=dr>0?dr*extr:0;
+  
+  // Try to use log-normal lookup for muons 
+
+  float sampled = sample_muon_secondary(E, dr);
+  cerr << "sampled: " << sampled << endl;
+  if(sampled >= 0) {
+    // Use sampled value, ensuring it's non-negative
+    secondary_ratio = max(0.0f, sampled);
+  } else {
+    // Fallback to original parameterization
+    cerr << "fallback: " << endl;
+    secondary_ratio = max(0.0f, 0.1880f+0.0206f*logE) * 0.910f/rho;
+  }
+
+  float extr = 1 + secondary_ratio;
+  float nph = dr>0 ? dr*extr : 0;
+  p.f = 1/extr;
+  p.a = 0, p.b = 0;
+
+
+  // float nph=dr>0?dr*extr:0;
   p.l=dr;
-  p.f=1/extr;
-  p.a=0, p.b=0;
+  // p.f=1/extr;
+  // p.a=0, p.b=0;
   return d.eff*ppm*nph;
 }
 
